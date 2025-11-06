@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/raspberrypi/pico-sdk:latest
+      image: ghcr.io/raspberrypi/pico-sdk-builder:arm-none-eabi-13
 
     steps:
       - name: Checkout
