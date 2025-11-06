@@ -2,36 +2,37 @@ name: Build Pico2 Firmware
 
 on:
   push:
-    branches: [ master ]
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: ghcr.io/raspberrypi/pico-sdk-builder:1.5.1
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
+      - name: Install ARM GCC Toolchain + Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi
 
-      - name: Create build directory
-        run: mkdir -p build
+      - name: Clone Pico-SDK (RP2350 support)
+        run: |
+          git clone --depth=1 --branch master https://github.com/raspberrypi/pico-sdk.git
+          git -C pico-sdk submodule update --init
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
 
-      - name: Configure CMake
-        working-directory: build
-        run: cmake .. -DPICO_BOARD=pico2 -DCMAKE_BUILD_TYPE=Release
+      - name: Configure build
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DPICO_BOARD=pico2 -G Ninja
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
 
       - name: Build Firmware
-        working-directory: build
-        run: cmake --build . --parallel
-
-      - name: Upload Firmware Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pico2-barcode-rs232
-          path: build/*.uf2
+        run: |
+          cd build
+          ninja -v
