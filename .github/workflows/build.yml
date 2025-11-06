@@ -1,0 +1,43 @@
+name: Build Pico2 Firmware
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+
+    - name: Fetch pico-sdk (RP2350-compatible)
+      run: |
+        git clone https://github.com/raspberrypi/pico-sdk.git
+        cd pico-sdk
+        git submodule update --init
+        echo "PICO_SDK_PATH=$PWD" >> $GITHUB_ENV
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. -DPICO_BOARD=pico2
+
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+
+    - name: Upload .uf2 Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pico2-barcode-rs232.uf2
+        path: build/pico2-barcode-rs232.uf2
