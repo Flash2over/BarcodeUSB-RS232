@@ -37,7 +37,7 @@ jobs:
         make -j$(nproc)
 
     - name: Upload .uf2 Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: pico2-barcode-rs232.uf2
+        name: pico2-barcode-rs232
         path: build/pico2-barcode-rs232.uf2
