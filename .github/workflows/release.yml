@@ -1,12 +1,12 @@
-name: Build Pico2 Firmware
+name: Release Firmware
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
+    tags:
+      - "v*.*.*"
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,13 +39,18 @@ jobs:
           -DCMAKE_C_COMPILER=arm-none-eabi-gcc \
           -DCMAKE_CXX_COMPILER=arm-none-eabi-g++
 
-    - name: Build
+    - name: Build Firmware
       run: |
         cd build
         ninja
 
-    - name: Upload .uf2 Artifact
-      uses: actions/upload-artifact@v4
+    - name: Rename firmware for release
+      run: |
+        VERSION="${GITHUB_REF_NAME}"
+        cp build/pico2-barcode-rs232.uf2 "barcodeusb-rs232-${VERSION}.uf2"
+
+    - name: Create Release and Upload Artifact
+      uses: softprops/action-gh-release@v2
       with:
-        name: pico2-barcode-rs232
-        path: build/pico2-barcode-rs232.uf2
+        files: |
+          barcodeusb-rs232-*.uf2
