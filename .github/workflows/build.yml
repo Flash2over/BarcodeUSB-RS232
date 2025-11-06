@@ -9,43 +9,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    container:
+      image: ghcr.io/raspberrypi/pico-sdk:latest
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install ARM Cross Compiler + Build Tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
 
-    - name: Fetch pico-sdk (RP2350)
-      run: |
-        git clone https://github.com/raspberrypi/pico-sdk.git
-        cd pico-sdk
-        git submodule update --init
-      env:
-        PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+      - name: Create build directory
+        run: mkdir -p build
 
-    - name: Configure CMake
-      env:
-        PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
-      run: |
-        mkdir -p build
-        cd build
-        cmake .. \
-          -G Ninja \
-          -DPICO_BOARD=pico2 \
-          -DPICO_SDK_PATH=${PICO_SDK_PATH} \
-          -DCMAKE_C_COMPILER=arm-none-eabi-gcc \
-          -DCMAKE_CXX_COMPILER=arm-none-eabi-g++
+      - name: Configure CMake
+        working-directory: build
+        run: cmake .. -DPICO_BOARD=pico2 -DCMAKE_BUILD_TYPE=Release
 
-    - name: Build
-      run: |
-        cd build
-        ninja
+      - name: Build Firmware
+        working-directory: build
+        run: cmake --build . --parallel
 
-    - name: Upload .uf2 Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: pico2-barcode-rs232
-        path: build/pico2-barcode-rs232.uf2
+      - name: Upload Firmware Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico2-barcode-rs232
+          path: build/*.uf2

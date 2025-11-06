@@ -37,7 +37,9 @@ jobs:
           -DPICO_BOARD=pico2 \
           -DPICO_SDK_PATH=${PICO_SDK_PATH} \
           -DCMAKE_C_COMPILER=arm-none-eabi-gcc \
-          -DCMAKE_CXX_COMPILER=arm-none-eabi-g++
+          -DCMAKE_CXX_COMPILER=arm-none-eabi-g++ \
+          -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
+
 
     - name: Build Firmware
       run: |
